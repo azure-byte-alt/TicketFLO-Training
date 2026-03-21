@@ -262,6 +262,12 @@
     <div class="final-score" id="final-score-display"></div>
     <p id="final-message"></p>
     <div style="height:24px"></div>
+    <div id="cert-section" style="display:none;background:#fff;border:1.5px solid #dde1e7;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:8px;">🏆</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">You earned a certificate!</div>
+      <div style="font-size:0.9rem;color:#718096;margin-bottom:16px;">You scored 80% or higher. Download your certificate of completion.</div>
+      <button class="btn-primary" onclick="downloadCertificate()" style="font-size:1rem;padding:12px 28px;">⬇ Download Certificate</button>
+    </div>
     <button class="btn-primary" onclick="restartApp()" style="font-size:1rem;padding:14px 32px;">Practice Again</button>
   </div>
 </div>
@@ -369,6 +375,64 @@ function loadScenario(){
   document.getElementById('btn-next').style.display='none';
 }
 
+// ── STUDENT NAME ──────────────────────────────────────────────
+let studentName = localStorage.getItem('tft_student_name') || '';
+if (!studentName) {
+  const entered = prompt('Welcome to TicketFLO Training! 👋\n\nPlease enter your name for your certificate:');
+  studentName = (entered || '').trim() || 'Student';
+  localStorage.setItem('tft_student_name', studentName);
+}
+
+// ── CERTIFICATE DOWNLOAD ──────────────────────────────────────
+function downloadCertificate() {
+  const name = localStorage.getItem('tft_student_name') || 'Student';
+  const score = document.getElementById('final-score-display').textContent;
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const w = window.open('', '_blank', 'width=900,height=650');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { width:900px; height:620px; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Sans',sans-serif; }
+    .cert { width:860px; height:580px; border:3px solid #1a3a6b; border-radius:12px; padding:40px 60px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; background:#fff; }
+    .cert::before { content:''; position:absolute; inset:8px; border:1.5px solid #c9a84c; border-radius:8px; pointer-events:none; }
+    .top-bar { background:linear-gradient(135deg,#1a3a6b,#2a5298); width:100%; padding:14px; border-radius:6px; margin-bottom:28px; }
+    .top-bar-text { color:#fff; font-size:0.75rem; letter-spacing:3px; text-transform:uppercase; font-weight:600; }
+    .org { color:#c9a84c; font-size:1rem; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+    .cert-title { font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:#1a3a6b; margin-bottom:20px; }
+    .presented { font-size:0.9rem; color:#718096; margin-bottom:12px; letter-spacing:1px; }
+    .name { font-family:'Playfair Display',serif; font-size:2.6rem; color:#1a3a6b; font-weight:700; margin-bottom:20px; border-bottom:2px solid #c9a84c; padding-bottom:12px; min-width:300px; }
+    .desc { font-size:0.9rem; color:#4a5568; line-height:1.7; max-width:560px; margin-bottom:24px; }
+    .score-badge { background:linear-gradient(135deg,#1a3a6b,#2a5298); color:#fff; border-radius:99px; padding:8px 24px; font-size:1rem; font-weight:700; letter-spacing:1px; margin-bottom:28px; display:inline-block; }
+    .footer-row { display:flex; gap:60px; align-items:flex-end; }
+    .sig-block { text-align:center; }
+    .sig-line { width:160px; border-top:1.5px solid #1a3a6b; margin:0 auto 6px; }
+    .sig-label { font-size:0.75rem; color:#718096; letter-spacing:1px; text-transform:uppercase; }
+    .seal { width:70px; height:70px; background:linear-gradient(135deg,#c9a84c,#e8c96a); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; border:3px solid #1a3a6b; }
+    .print-btn { position:fixed; bottom:20px; right:20px; background:#1a3a6b; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; }
+    .print-btn:hover { background:#2a5298; }
+    @media print { .print-btn { display:none; } }
+  </style></head><body>
+  <div class="cert">
+    <div class="top-bar"><div class="top-bar-text">Certificate of Completion</div></div>
+    <div class="org">TicketFLO Training</div>
+    <div class="cert-title">Certificate of Achievement</div>
+    <div class="presented">This certifies that</div>
+    <div class="name">${name}</div>
+    <div class="desc">has successfully completed the <strong>TicketFLO Training IT Help Desk Ticket Writing Program</strong>, demonstrating proficiency in documenting, prioritizing, and escalating IT support tickets across 15 real-world scenarios.</div>
+    <div class="score-badge">Final Score: ${score}</div>
+    <div class="footer-row">
+      <div class="sig-block"><div class="sig-line"></div><div class="sig-label">TicketFLO Training</div></div>
+      <div class="seal">🏆</div>
+      <div class="sig-block"><div class="sig-line"></div><div class="sig-label">${date}</div></div>
+    </div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+  </body></html>`);
+  w.document.close();
+}
+
 // ── PROGRESS TRACKER ──────────────────────────────────────────
 function saveScenarioProgress(scenarioIndex, scorePercent) {
   const history = JSON.parse(localStorage.getItem('tft_history') || '[]');
@@ -394,6 +458,9 @@ function showComplete(){
   const runs = JSON.parse(localStorage.getItem('tft_runs') || '[]');
   runs.push({ score: pct, date: new Date().toLocaleDateString(), ts: Date.now() });
   localStorage.setItem('tft_runs', JSON.stringify(runs));
+  if (pct >= 80) {
+    document.getElementById('cert-section').style.display = 'block';
+  }
 }
 
 function restartApp(){
