@@ -142,6 +142,7 @@
     <a href="ticket-guide.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;font-family:'IBM Plex Sans',sans-serif;transition:all 0.15s;" onmouseover="this.style.background='#f0f2f5';this.style.color='#1a202c'" onmouseout="this.style.background='transparent';this.style.color='var(--muted)'">Learn</a>
     <a href="helpdesk-practice.html" style="font-size:0.82rem;color:#00b894;text-decoration:none;padding:5px 12px;border-radius:6px;background:rgba(0,184,148,0.08);font-family:'IBM Plex Sans',sans-serif;">Practice</a>
     <a href="results.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;font-family:'IBM Plex Sans',sans-serif;transition:all 0.15s;" onmouseover="this.style.background='#f0f2f5';this.style.color='#1a202c'" onmouseout="this.style.background='transparent';this.style.color='var(--muted)'">Results</a>
+    <a href="progress.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;font-family:'IBM Plex Sans',sans-serif;transition:all 0.15s;" onmouseover="this.style.background='#f0f2f5';this.style.color='#1a202c'" onmouseout="this.style.background='transparent';this.style.color='var(--muted)'">📈 Progress</a>
   </nav>
   <div class="score-display">Score: <strong id="header-score">0</strong> pts</div>
 </header>
@@ -286,6 +287,7 @@ async function submitTicket(){
   const scorePercent=Math.round((passed/s.checks.length)*100);
   const pointsEarned=hintUsed?Math.max(0,passed-1):passed;
   totalScore+=pointsEarned;maxPossible+=s.checks.length;hintUsed=false;
+  saveScenarioProgress(currentScenario, scorePercent);
   document.getElementById('header-score').textContent=totalScore;
   const panel=document.getElementById('feedback-panel');panel.classList.add('show');
   let cc=scorePercent>=80?'score-a':scorePercent>=55?'score-b':'score-c';
@@ -367,6 +369,19 @@ function loadScenario(){
   document.getElementById('btn-next').style.display='none';
 }
 
+// ── PROGRESS TRACKER ──────────────────────────────────────────
+function saveScenarioProgress(scenarioIndex, scorePercent) {
+  const history = JSON.parse(localStorage.getItem('tft_history') || '[]');
+  const scenarioName = scenarios[scenarioIndex]?.type || 'Scenario ' + (scenarioIndex + 1);
+  history.push({
+    scenario: scenarioIndex + 1,
+    name: scenarioName,
+    score: scorePercent,
+    date: new Date().toLocaleDateString()
+  });
+  localStorage.setItem('tft_history', JSON.stringify(history));
+}
+
 function showComplete(){
   document.getElementById('practice-section').style.display='none';
   document.getElementById('complete-screen').style.display='block';
@@ -375,9 +390,22 @@ function showComplete(){
   document.getElementById('final-score-display').textContent=pct+'%';
   document.getElementById('header-score').textContent=totalScore;
   document.getElementById('final-message').textContent=pct>=80?"Excellent work! You have strong ticket writing skills. Keep it up!":pct>=55?"Good effort! Review the model answers for the areas you missed and try again.":"Keep practicing! Focus on including WHO, WHAT, WHEN, and WHAT WAS TRIED in every ticket.";
+  // Save full run to localStorage
+  const runs = JSON.parse(localStorage.getItem('tft_runs') || '[]');
+  runs.push({ score: pct, date: new Date().toLocaleDateString(), ts: Date.now() });
+  localStorage.setItem('tft_runs', JSON.stringify(runs));
 }
 
-function restartApp(){currentScenario=0;totalScore=0;maxPossible=0;document.getElementById('header-score').textContent=0;document.getElementById('practice-section').style.display='block';document.getElementById('complete-screen').style.display='none';isUnlocked=localStorage.getItem('ticketflotraining_unlocked')==='true';loadScenario();clearForm();}
+function restartApp(){
+  // Clear per-scenario history for new run
+  localStorage.removeItem('tft_history');
+  currentScenario=0;totalScore=0;maxPossible=0;
+  document.getElementById('header-score').textContent=0;
+  document.getElementById('practice-section').style.display='block';
+  document.getElementById('complete-screen').style.display='none';
+  isUnlocked=localStorage.getItem('ticketflotraining_unlocked')==='true';
+  loadScenario();clearForm();
+}
 
 loadScenario();
 </script>
