@@ -854,9 +854,10 @@ let isUnlocked = localStorage.getItem('ticketflotraining_unlocked') === 'true';
 function nextScenario(){
   currentScenario++;
   if(currentScenario>=scenarios.length){showComplete();return;}
-  if(currentScenario>=1 && !isUnlocked){
-    document.getElementById('paywall-overlay').classList.add('show');
-    return;
+  // if(currentScenario>=1 && !isUnlocked){
+//   document.getElementById('paywall-overlay').classList.add('show');
+//   return;
+// }
   }
   loadScenario();clearForm();window.scrollTo({top:0,behavior:'smooth'});
 }
