@@ -9,8 +9,8 @@ export default async function handler(req, res) {
   const { text, gender } = req.body;
 
   const voiceId = gender === 'female'
-    ? 'EXAVITQu4vr4xnSDxMaL'  // Sarah - natural female
-    : 'TxGEqnHWrfWFTfGW9XjX'; // Josh - natural male
+    ? 'EXAVITQu4vr4xnSDxMaL'
+    : 'TxGEqnHWrfWFTfGW9XjX';
 
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -28,13 +28,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(500).json({ error: err });
+      console.error('ElevenLabs error:', response.status, err);
+      return res.status(500).json({ error: err, status: response.status });
     }
 
     const audioBuffer = await response.arrayBuffer();
     res.setHeader('Content-Type', 'audio/mpeg');
     res.send(Buffer.from(audioBuffer));
   } catch (err) {
+    console.error('Catch error:', err.message);
     res.status(500).json({ error: err.message });
   }
 }
