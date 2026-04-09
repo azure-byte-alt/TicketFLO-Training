@@ -8,11 +8,7 @@ export default async function handler(req, res) {
 
   const { text, gender } = req.body;
 
-  const voiceId = gender === 'female'
-    ? 'EXAVITQu4vr4xnSDxMaL'
-    : 'TxGEqnHWrfWFTfGW9XjX';
-
-  try {
+ const voiceId = 'ZMK5OD2jmsdse3EKE4W5';
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
