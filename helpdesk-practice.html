@@ -957,6 +957,7 @@ function loadScenario(){
   window.speechSynthesis && window.speechSynthesis.cancel();
   clearInterval(ringInterval);
   const s=scenarios[currentScenario];
+  console.log(s.probing);//
   document.getElementById('scenario-num').textContent=currentScenario+1;
   document.getElementById('scenario-total').textContent=scenarios.length;
   document.getElementById('ticket-type-badge').textContent=s.type;
