@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #1a2744;
+  --teal: #4db8a4;
+  --bg: #f0f4f8;
+}
+
+body {
+  background-color: #f0f4f8;
+  color: #1a2744;
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #4db8a4 #1a2744;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #1a2744;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #4db8a4;
+    border-radius: 2px;
+  }
+}
