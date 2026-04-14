@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TicketFLO Training – My Progress</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6f9; --surface: #ffffff; --surface2: #f0f2f5;
+    --border: #dde1e7; --accent: #00b894; --accent2: #e17055;
+    --text: #1a202c; --muted: #718096; --good: #27ae60;
+    --warn: #f0a500; --bad: #e74c3c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; }
+
+  header { background: #ffffff; border-bottom: 2px solid var(--border); padding: 16px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'IBM Plex Mono', monospace; font-size: 1.3rem; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
+  .logo span { color: var(--text); }
+  .badge { background: var(--accent2); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: 1px; text-transform: uppercase; }
+  .header-nav { margin-left: auto; display: flex; gap: 6px; }
+  .nav-link { font-size: 0.82rem; color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+  .nav-link:hover { background: var(--surface2); color: var(--text); }
+  .nav-link.active { color: var(--accent); background: rgba(0,184,148,0.08); }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 48px 24px; }
+
+  .page-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+  .page-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
+
+  .sec-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* SUMMARY STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .stat-card { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .stat-number { font-family: 'IBM Plex Mono', monospace; font-size: 2.4rem; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+  .stat-label { font-size: 0.85rem; color: var(--muted); }
+
+  /* CHART */
+  .chart-card { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .chart-card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 24px; }
+  .chart-wrap { display: flex; align-items: flex-end; gap: 8px; height: 160px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 0.4s ease; min-height: 4px; }
+  .bar-label { font-size: 0.7rem; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bar-pct { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 600; }
+
+  /* HISTORY TABLE */
+  .history-card { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th { background: var(--surface2); padding: 12px 16px; text-align: left; font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .history-table td { padding: 12px 16px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: var(--surface2); }
+  .score-chip { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+  .chip-good { background: rgba(39,174,96,0.12); color: var(--good); }
+  .chip-warn { background: rgba(240,165,0,0.12); color: var(--warn); }
+  .chip-bad { background: rgba(231,76,60,0.12); color: var(--bad); }
+
+  /* IMPROVEMENT BANNER */
+  .improve-banner { border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; display: flex; align-items: center; gap: 16px; font-size: 0.95rem; }
+  .improve-banner.up { background: rgba(39,174,96,0.1); border: 1.5px solid rgba(39,174,96,0.3); color: var(--good); }
+  .improve-banner.down { background: rgba(231,76,60,0.08); border: 1.5px solid rgba(231,76,60,0.2); color: var(--bad); }
+  .improve-banner.neutral { background: rgba(0,184,148,0.08); border: 1.5px solid rgba(0,184,148,0.2); color: var(--accent); }
+  .improve-icon { font-size: 2rem; flex-shrink: 0; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 80px 24px; }
+  .empty-icon { font-size: 4rem; margin-bottom: 20px; }
+  .empty-state h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+  .empty-state p { color: var(--muted); font-size: 0.95rem; margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  .btn-primary { background: var(--accent); color: #0d1117; border: none; border-radius: 8px; padding: 12px 28px; font-size: 0.95rem; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.15s; }
+  .btn-primary:hover { background: #00a381; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; cursor: pointer; transition: all 0.15s; margin-left: 8px; }
+  .btn-ghost:hover { border-color: var(--bad); color: var(--bad); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Ticket<span>FLO</span> Training</div>
+  <div class="badge">Training Tool</div>
+  <nav class="header-nav">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="ticket-guide.html">Learn</a>
+    <a class="nav-link" href="helpdesk-practice.html">Practice</a>
+    <a class="nav-link" href="results.html">Results</a>
+    <a class="nav-link active" href="progress.html">📈 Progress</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="page-title">My Progress</div>
+  <div class="page-sub">Track your improvement over time. Every scenario you complete is logged here so you can see how far you've come.</div>
+
+  <div id="main-content"></div>
+
+</div>
+
+<script>
+function getScoreColor(pct) {
+  if (pct >= 80) return 'var(--good)';
+  if (pct >= 55) return 'var(--warn)';
+  return 'var(--bad)';
+}
+function getChipClass(pct) {
+  if (pct >= 80) return 'chip-good';
+  if (pct >= 55) return 'chip-warn';
+  return 'chip-bad';
+}
+function getTrend(history) {
+  if (history.length < 3) return null;
+  const recent = history.slice(-3).map(h => h.score);
+  const avg = recent.reduce((a,b) => a+b, 0) / recent.length;
+  const first3 = history.slice(0, 3).map(h => h.score);
+  const firstAvg = first3.reduce((a,b) => a+b, 0) / first3.length;
+  const diff = avg - firstAvg;
+  return { diff: Math.round(diff), avg: Math.round(avg) };
+}
+
+function render() {
+  const history = JSON.parse(localStorage.getItem('tft_history') || '[]');
+  const container = document.getElementById('main-content');
+
+  if (history.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h2>No progress yet!</h2>
+        <p>Complete at least one scenario in Practice mode and your scores will show up here automatically.</p>
+        <a class="btn-primary" href="helpdesk-practice.html">Start Practicing →</a>
+      </div>`;
+    return;
+  }
+
+  // Stats
+  const scores = history.map(h => h.score);
+  const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+  const best = Math.max(...scores);
+  const latest = scores[scores.length - 1];
+  const trend = getTrend(history);
+
+  // Improvement banner
+  let bannerHTML = '';
+  if (trend) {
+    if (trend.diff > 0) {
+      bannerHTML = `<div class="improve-banner up"><div class="improve-icon">🚀</div><div><strong>You're improving!</strong> Your recent average is <strong>${trend.avg}%</strong> — up ${trend.diff} points from where you started. Keep going!</div></div>`;
+    } else if (trend.diff < 0) {
+      bannerHTML = `<div class="improve-banner down"><div class="improve-icon">💪</div><div><strong>Keep pushing!</strong> Your recent average is <strong>${trend.avg}%</strong>. Review the ticket guide and focus on WHO, WHAT, WHEN, and WHAT WAS TRIED.</div></div>`;
+    } else {
+      bannerHTML = `<div class="improve-banner neutral"><div class="improve-icon">📈</div><div><strong>You're consistent!</strong> Your recent average is <strong>${trend.avg}%</strong>. Try to push above 80% on your next scenarios.</div></div>`;
+    }
+  }
+
+  // Chart bars (last 15 scenarios)
+  const chartData = history.slice(-15);
+  const barsHTML = chartData.map((h, i) => {
+    const color = getScoreColor(h.score);
+    const heightPx = Math.max(8, Math.round((h.score / 100) * 150));
+    return `<div class="bar-col">
+      <div class="bar-pct" style="color:${color}">${h.score}%</div>
+      <div class="bar" style="height:${heightPx}px;background:${color};"></div>
+      <div class="bar-label">S${h.scenario}</div>
+    </div>`;
+  }).join('');
+
+  // History table (most recent first)
+  const rowsHTML = [...history].reverse().map((h, i) => {
+    const chipClass = getChipClass(h.score);
+    return `<tr>
+      <td><strong>Scenario ${h.scenario}</strong></td>
+      <td>${h.name}</td>
+      <td><span class="score-chip ${chipClass}">${h.score}%</span></td>
+      <td style="color:var(--muted)">${h.date}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${bannerHTML}
+
+    <div class="sec-label">Your Stats</div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number">${history.length}</div>
+        <div class="stat-label">Scenarios Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:${getScoreColor(avg)}">${avg}%</div>
+        <div class="stat-label">Average Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--good)">${best}%</div>
+        <div class="stat-label">Best Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:${getScoreColor(latest)}">${latest}%</div>
+        <div class="stat-label">Latest Score</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Score Chart</div>
+    <div class="chart-card">
+      <h2>Score Per Scenario (last ${chartData.length})</h2>
+      <div class="chart-wrap">${barsHTML}</div>
+    </div>
+
+    <div class="sec-label">History</div>
+    <div class="history-card">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Scenario Type</th>
+            <th>Score</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHTML}</tbody>
+      </table>
+    </div>
+
+    <div style="text-align:center;margin-top:32px">
+      <a class="btn-primary" href="helpdesk-practice.html">Keep Practicing →</a>
+      <button class="btn-ghost" onclick="clearProgress()">Clear My Progress</button>
+    </div>`;
+}
+
+function clearProgress() {
+  if (confirm('Are you sure you want to clear all your progress? This cannot be undone.')) {
+    localStorage.removeItem('tft_history');
+    localStorage.removeItem('tft_runs');
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
