@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -17,11 +16,16 @@ export default function LoginPage() {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value
     const password = (form.elements.namedItem('password') as HTMLInputElement).value
 
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
 
-    if (authError) {
-      setError(authError.message)
+    const data = await res.json()
+
+    if (!res.ok) {
+      setError(data.error || 'Sign in failed')
       setLoading(false)
       return
     }
