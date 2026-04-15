@@ -1,27 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useFormState, useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { signIn } from './actions'
 
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full bg-[#1a2744] text-white py-2.5 px-4 rounded-lg font-medium hover:bg-[#243459] focus:outline-none focus:ring-2 focus:ring-[#4db8a4] focus:ring-offset-2 transition disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Signing in...' : 'Sign In'}
+    </button>
+  )
+}
+
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    const formData = new FormData(e.currentTarget)
-    const result = await signIn(formData)
-
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
-    // On success, the server action calls redirect('/dashboard') — no client code needed
-  }
+  const [state, formAction] = useFormState(signIn, { error: '' })
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center p-4">
@@ -43,13 +40,13 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-[#1a2744] mb-2">Welcome back</h1>
           <p className="text-gray-500 mb-6">Sign in to continue your training</p>
 
-          {error && (
+          {state?.error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
+              {state.error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={formAction} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
@@ -78,13 +75,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#1a2744] text-white py-2.5 px-4 rounded-lg font-medium hover:bg-[#243459] focus:outline-none focus:ring-2 focus:ring-[#4db8a4] focus:ring-offset-2 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+            <SubmitButton />
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
