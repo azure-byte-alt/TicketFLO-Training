@@ -17,8 +17,8 @@ export default async function PracticeSessionPage({
 
   if (!scenario) notFound()
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) notFound()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) notFound()
 
-  return <PracticeForm scenario={scenario} userId={session.user.id} />
+  return <PracticeForm scenario={scenario} userId={user.id} />
 }

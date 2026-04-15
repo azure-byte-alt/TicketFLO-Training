@@ -4,8 +4,8 @@ import { ScoreBadge } from '@/components/ScoreCard'
 
 export default async function FeedbackPage() {
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return null
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
 
   const { data: feedbackList } = await supabase
     .from('feedback')
@@ -24,7 +24,7 @@ export default async function FeedbackPage() {
         )
       )
     `)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   const difficultyBadge: Record<string, string> = {

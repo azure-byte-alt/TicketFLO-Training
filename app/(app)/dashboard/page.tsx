@@ -20,21 +20,21 @@ function getTipOfTheDay() {
 
 export default async function DashboardPage() {
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!session) return null
+  if (!user) return null
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   // Fetch stats
   const { data: allFeedback } = await supabase
     .from('feedback')
     .select('total_score, created_at')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: true })
 
   const totalTickets = allFeedback?.length ?? 0
@@ -81,11 +81,11 @@ export default async function DashboardPage() {
         )
       )
     `)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const displayName = profile?.full_name || session.user.email?.split('@')[0] || 'there'
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'there'
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const tip = getTipOfTheDay()
 

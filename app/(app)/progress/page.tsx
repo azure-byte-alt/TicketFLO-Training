@@ -14,8 +14,8 @@ const ACHIEVEMENTS = [
 
 export default async function ProgressPage() {
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return null
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
 
   const { data: allFeedback } = await supabase
     .from('feedback')
@@ -34,7 +34,7 @@ export default async function ProgressPage() {
         )
       )
     `)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: true })
 
   const total = allFeedback?.length ?? 0

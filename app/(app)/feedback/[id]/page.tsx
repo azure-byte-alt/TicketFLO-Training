@@ -28,8 +28,8 @@ export default async function FeedbackDetailPage({
   params: { id: string }
 }) {
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) notFound()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) notFound()
 
   const { data: feedback } = await supabase
     .from('feedback')
@@ -52,7 +52,7 @@ export default async function FeedbackDetailPage({
       )
     `)
     .eq('id', params.id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (!feedback) notFound()
