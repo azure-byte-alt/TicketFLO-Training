@@ -1,19 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/dashboard'
-    })
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,21 +19,16 @@ export default function LoginPage() {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value
     const password = (form.elements.namedItem('password') as HTMLInputElement).value
 
-    try {
-      const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const supabase = createClient()
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
-        return
-      }
-
-      window.location.href = '/dashboard'
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+    if (authError) {
+      setError(authError.message)
       setLoading(false)
+      return
     }
+
+    router.push('/dashboard')
   }
 
   return (
