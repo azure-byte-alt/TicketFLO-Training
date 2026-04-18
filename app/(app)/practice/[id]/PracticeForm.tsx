@@ -256,6 +256,14 @@ export default function PracticeForm({ scenario }: Props) {
         {/* Tips Sidebar */}
         <div className="space-y-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <div className="mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#4db8a4]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4db8a4]">
+                <span>AI Coach</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Real-time guidance while you draft your ticket.
+              </p>
+            </div>
             <h3 className="font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
               <span className="text-[#4db8a4]">💡</span> Writing Tips
             </h3>

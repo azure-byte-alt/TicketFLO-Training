@@ -141,6 +141,9 @@ export default function Sidebar({ userName, userEmail }: SidebarProps) {
           </svg>
           Sign Out
         </button>
+        <div className="mt-4 text-center text-[11px] tracking-wide text-gray-500">
+          @2026 TicketFLO Training
+        </div>
       </div>
     </aside>
   )
