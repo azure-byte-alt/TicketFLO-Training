@@ -1,6 +1,7 @@
 import { createClient, getToken, decodeToken } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ScoreBadge } from '@/components/ScoreCard'
+import { getDifficultyFromTier } from '@/lib/scenarios'
 
 const ACHIEVEMENTS = [
   { id: 'first_ticket', icon: '🎫', title: 'First Ticket', desc: 'Submit your first practice ticket', condition: (n: number) => n >= 1 },
@@ -32,7 +33,7 @@ export default async function ProgressPage() {
       tickets (
         category,
         scenarios (
-          difficulty
+          tier
         )
       )
     `)
@@ -72,7 +73,7 @@ export default async function ProgressPage() {
   allFeedback?.forEach((f) => {
     const ticket = Array.isArray(f.tickets) ? f.tickets[0] : f.tickets
     const scenario = ticket && (Array.isArray((ticket as any).scenarios) ? (ticket as any).scenarios[0] : (ticket as any).scenarios)
-    const diff = scenario?.difficulty ?? 'unknown'
+    const diff = getDifficultyFromTier(scenario?.tier)
     if (!diffStats[diff]) diffStats[diff] = { total: 0, count: 0 }
     diffStats[diff].total += f.total_score
     diffStats[diff].count++

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Scenario } from '@/types'
+import { normalizeScenario } from '@/lib/scenarios'
 
 const difficultyColor: Record<string, string> = {
   beginner: 'bg-green-100 text-green-700',
@@ -19,10 +20,13 @@ const categoryColor: Record<string, string> = {
 
 export default async function PracticePage() {
   const supabase = createClient()
-  const { data: scenarios } = await supabase
+  const { data: scenarios, error } = await supabase
     .from('scenarios')
-    .select('*')
+    .select('id, title, scenario_number, caller_name, department, situation_text, error_message, urgency_note, correct_priority, correct_category, tier, is_active, created_at')
+    .eq('is_active', true)
     .order('scenario_number', { ascending: true })
+
+  const scenarioCards = (scenarios ?? []).map((scenario) => normalizeScenario(scenario))
 
   return (
     <div className="p-8">
@@ -33,7 +37,12 @@ export default async function PracticePage() {
         </p>
       </div>
 
-      {!scenarios || scenarios.length === 0 ? (
+      {error ? (
+        <div className="bg-white rounded-xl shadow-sm border border-red-100 p-12 text-center">
+          <p className="text-red-600 font-medium">We couldn&apos;t load practice scenarios.</p>
+          <p className="text-gray-500 text-sm mt-1">Supabase returned: {error.message}</p>
+        </div>
+      ) : scenarioCards.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
           <div className="text-5xl mb-4">📭</div>
           <p className="text-gray-500 font-medium">No scenarios available yet.</p>
@@ -43,7 +52,7 @@ export default async function PracticePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {(scenarios as Scenario[]).map((scenario) => (
+          {(scenarioCards as Scenario[]).map((scenario) => (
             <div
               key={scenario.id}
               className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col hover:border-[#4db8a4] hover:shadow-md transition-all duration-200"

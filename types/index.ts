@@ -7,15 +7,25 @@ export interface Profile {
 
 export interface Scenario {
   id: string
+  scenario_number?: number | null
   title: string
   description: string
   category: string
   difficulty: 'beginner' | 'intermediate' | 'advanced'
-  ideal_title: string | null
-  ideal_description: string | null
-  ideal_steps: string | null
-  ideal_priority: string | null
-  ideal_category: string | null
+  caller_name?: string | null
+  department?: string | null
+  situation_text?: string | null
+  error_message?: string | null
+  urgency_note?: string | null
+  correct_priority?: string | null
+  correct_category?: string | null
+  tier?: number | null
+  is_active?: boolean | null
+  ideal_title?: string | null
+  ideal_description?: string | null
+  ideal_steps?: string | null
+  ideal_priority?: string | null
+  ideal_category?: string | null
   created_at: string
 }
 

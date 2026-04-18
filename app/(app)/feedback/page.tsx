@@ -1,6 +1,7 @@
 import { createClient, getToken, decodeToken } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ScoreBadge } from '@/components/ScoreCard'
+import { getDifficultyFromTier } from '@/lib/scenarios'
 
 export default async function FeedbackPage() {
   const supabase = createClient()
@@ -15,16 +16,16 @@ export default async function FeedbackPage() {
       id,
       total_score,
       created_at,
-      tickets (
-        id,
-        title,
-        category,
-        priority,
-        scenarios (
+        tickets (
+          id,
           title,
-          difficulty
+          category,
+          priority,
+          scenarios (
+            title,
+            tier
+          )
         )
-      )
     `)
     .eq('user_id', userInfo.id)
     .order('created_at', { ascending: false })
@@ -81,7 +82,7 @@ export default async function FeedbackPage() {
               {feedbackList.map((item) => {
                 const ticket = Array.isArray(item.tickets) ? item.tickets[0] : item.tickets
                 const scenario = ticket && (Array.isArray((ticket as any).scenarios) ? (ticket as any).scenarios[0] : (ticket as any).scenarios)
-                const difficulty = scenario?.difficulty ?? 'beginner'
+                const difficulty = getDifficultyFromTier(scenario?.tier)
                 return (
                   <tr key={item.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">

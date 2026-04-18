@@ -47,9 +47,7 @@ export default async function FeedbackDetailPage({
         scenario_id,
         scenarios (
           id,
-          title,
-          description,
-          difficulty
+          title
         )
       )
     `)
