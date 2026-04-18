@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, getToken } from '@/lib/supabase/server'
 import { evaluateTicket } from '@/lib/anthropic'
 
+function getScoreLabel(score: number) {
+  if (score >= 90) return 'Excellent'
+  if (score >= 80) return 'Good'
+  if (score >= 60) return 'Needs Improvement'
+  return 'Poor'
+}
+
 export async function POST(request: NextRequest) {
   const token = getToken()
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -35,23 +42,27 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { data: ticket, error: ticketError } = await supabase
-    .from('tickets')
+  const { data: submission, error: submissionError } = await supabase
+    .from('submissions')
     .insert({
       user_id: user.id,
       scenario_id: scenarioId ?? null,
-      title: title.trim(),
+      subject_line: title.trim(),
       category,
       priority,
       description: description.trim(),
-      steps_to_reproduce: steps.trim() || null,
+      handoff_note: steps.trim() || null,
+      attempt_number: 1,
     })
     .select('id')
     .single()
 
-  if (ticketError || !ticket) {
-    console.error('Ticket insert error:', ticketError)
-    return NextResponse.json({ error: 'Failed to save ticket' }, { status: 500 })
+  if (submissionError || !submission) {
+    console.error('Submission insert error:', submissionError)
+    return NextResponse.json(
+      { error: submissionError?.message || 'Failed to save ticket' },
+      { status: 500 }
+    )
   }
 
   let evaluation
@@ -66,33 +77,31 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error('Claude evaluation error:', err)
-    await supabase.from('tickets').delete().eq('id', ticket.id)
+    await supabase.from('submissions').delete().eq('id', submission.id)
     return NextResponse.json({ error: 'AI evaluation failed. Please try again.' }, { status: 500 })
   }
 
   const { data: feedback, error: feedbackError } = await supabase
     .from('feedback')
     .insert({
-      ticket_id: ticket.id,
-      user_id: user.id,
-      total_score: evaluation.total_score,
-      title_score: evaluation.title_score,
-      description_score: evaluation.description_score,
-      steps_score: evaluation.steps_score,
-      priority_category_score: evaluation.priority_category_score,
-      strengths: evaluation.strengths,
-      improvements: evaluation.improvements,
-      overall_feedback: evaluation.overall_feedback,
-      ideal_title: evaluation.ideal_title,
-      ideal_description: evaluation.ideal_description,
-      ideal_steps: evaluation.ideal_steps,
+      submission_id: submission.id,
+      score: evaluation.total_score,
+      score_label: getScoreLabel(evaluation.total_score),
+      strength: evaluation.strengths[0] ?? 'Clear effort shown in the submission.',
+      improvement: evaluation.improvements[0] ?? 'Keep refining specificity and business impact.',
+      critical_miss: evaluation.improvements[1] ?? null,
+      coach_note: evaluation.overall_feedback,
+      model_used: 'claude-sonnet-4-6',
     })
     .select('id')
     .single()
 
   if (feedbackError || !feedback) {
     console.error('Feedback insert error:', feedbackError)
-    return NextResponse.json({ error: 'Failed to save feedback' }, { status: 500 })
+    return NextResponse.json(
+      { error: feedbackError?.message || 'Failed to save feedback' },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ feedbackId: feedback.id })

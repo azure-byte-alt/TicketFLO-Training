@@ -14,20 +14,21 @@ export default async function FeedbackPage() {
     .from('feedback')
     .select(`
       id,
-      total_score,
+      score,
+      score_label,
       created_at,
-        tickets (
-          id,
+      submissions!inner (
+        id,
+        subject_line,
+        category,
+        priority,
+        scenarios (
           title,
-          category,
-          priority,
-          scenarios (
-            title,
-            tier
-          )
+          tier
         )
+      )
     `)
-    .eq('user_id', userInfo.id)
+    .eq('submissions.user_id', userInfo.id)
     .order('created_at', { ascending: false })
 
   const difficultyBadge: Record<string, string> = {
@@ -53,7 +54,7 @@ export default async function FeedbackPage() {
 
       {!feedbackList || feedbackList.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
-          <div className="text-5xl mb-4">💬</div>
+          <div className="text-5xl mb-4">ðŸ’¬</div>
           <h3 className="font-semibold text-[#1a2744] mb-2">No feedback yet</h3>
           <p className="text-gray-500 text-sm mb-4">
             Complete a practice scenario to receive AI-powered feedback on your ticket writing.
@@ -80,21 +81,22 @@ export default async function FeedbackPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {feedbackList.map((item) => {
-                const ticket = Array.isArray(item.tickets) ? item.tickets[0] : item.tickets
-                const scenario = ticket && (Array.isArray((ticket as any).scenarios) ? (ticket as any).scenarios[0] : (ticket as any).scenarios)
+                const submission = Array.isArray(item.submissions) ? item.submissions[0] : item.submissions
+                const scenario = submission && (Array.isArray((submission as any).scenarios) ? (submission as any).scenarios[0] : (submission as any).scenarios)
                 const difficulty = getDifficultyFromTier(scenario?.tier)
+
                 return (
                   <tr key={item.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">
                       <div className="font-medium text-[#1a2744] truncate max-w-xs">
-                        {scenario?.title || ticket?.title || 'Untitled Ticket'}
+                        {scenario?.title || submission?.subject_line || 'Untitled Ticket'}
                       </div>
-                      {scenario && ticket?.title && (
-                        <div className="text-xs text-gray-400 truncate max-w-xs mt-0.5">{ticket.title}</div>
+                      {scenario && submission?.subject_line && (
+                        <div className="text-xs text-gray-400 truncate max-w-xs mt-0.5">{submission.subject_line}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">
-                      <span className="text-gray-600">{ticket?.category ?? '—'}</span>
+                      <span className="text-gray-600">{submission?.category ?? '-'}</span>
                     </td>
                     <td className="px-6 py-4 hidden lg:table-cell">
                       <span
@@ -106,7 +108,7 @@ export default async function FeedbackPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <ScoreBadge score={item.total_score} />
+                      <ScoreBadge score={item.score} />
                     </td>
                     <td className="px-6 py-4 text-gray-400 text-xs hidden sm:table-cell whitespace-nowrap">
                       {new Date(item.created_at).toLocaleDateString('en-US', {
@@ -120,7 +122,7 @@ export default async function FeedbackPage() {
                         href={`/feedback/${item.id}`}
                         className="text-xs text-[#4db8a4] font-medium hover:underline whitespace-nowrap"
                       >
-                        View Details →
+                        View Details â†’
                       </Link>
                     </td>
                   </tr>

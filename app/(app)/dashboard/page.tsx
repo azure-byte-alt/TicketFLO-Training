@@ -4,13 +4,13 @@ import { ScoreBadge } from '@/components/ScoreCard'
 
 const TIPS = [
   'Always include the affected system or application name in the ticket title.',
-  'Specify when the issue started — exact time and date helps IT prioritize.',
+  'Specify when the issue started â€” exact time and date helps IT prioritize.',
   'Number your reproduction steps for clarity and consistency.',
-  'Include error messages verbatim — exact text helps find solutions faster.',
+  'Include error messages verbatim â€” exact text helps find solutions faster.',
   'State the business impact: is work blocked, or is it a minor inconvenience?',
-  'Mention how many users are affected — one person or the whole department?',
+  'Mention how many users are affected â€” one person or the whole department?',
   'Note any recent changes: updates, new software, configuration changes.',
-  'Attach screenshots or logs when possible — a picture is worth a thousand words.',
+  'Attach screenshots or logs when possible â€” a picture is worth a thousand words.',
 ]
 
 function getTipOfTheDay() {
@@ -34,16 +34,22 @@ export default async function DashboardPage() {
 
   const { data: allFeedback } = await supabase
     .from('feedback')
-    .select('total_score, created_at')
-    .eq('user_id', userInfo.id)
+    .select(`
+      score,
+      created_at,
+      submissions!inner (
+        user_id
+      )
+    `)
+    .eq('submissions.user_id', userInfo.id)
     .order('created_at', { ascending: true })
 
   const totalTickets = allFeedback?.length ?? 0
   const avgScore = totalTickets > 0
-    ? Math.round(allFeedback!.reduce((sum, f) => sum + f.total_score, 0) / totalTickets)
+    ? Math.round(allFeedback!.reduce((sum, f) => sum + f.score, 0) / totalTickets)
     : 0
   const bestScore = totalTickets > 0
-    ? Math.max(...allFeedback!.map((f) => f.total_score))
+    ? Math.max(...allFeedback!.map((f) => f.score))
     : 0
 
   let streak = 0
@@ -70,17 +76,17 @@ export default async function DashboardPage() {
     .from('feedback')
     .select(`
       id,
-      total_score,
+      score,
       created_at,
-      tickets (
+      submissions!inner (
         id,
-        title,
+        subject_line,
         scenarios (
           title
         )
       )
     `)
-    .eq('user_id', userInfo.id)
+    .eq('submissions.user_id', userInfo.id)
     .order('created_at', { ascending: false })
     .limit(5)
 
@@ -89,10 +95,10 @@ export default async function DashboardPage() {
   const tip = getTipOfTheDay()
 
   const stats = [
-    { label: 'Total Tickets', value: totalTickets, icon: '🎫', color: 'bg-blue-50 text-blue-700' },
-    { label: 'Average Score', value: avgScore ? `${avgScore}/100` : 'N/A', icon: '⭐', color: 'bg-purple-50 text-purple-700' },
-    { label: 'Best Score', value: bestScore ? `${bestScore}/100` : 'N/A', icon: '🏆', color: 'bg-amber-50 text-amber-700' },
-    { label: 'Current Streak', value: `${streak} day${streak !== 1 ? 's' : ''}`, icon: '🔥', color: 'bg-orange-50 text-orange-700' },
+    { label: 'Total Tickets', value: totalTickets, icon: 'ðŸŽ«', color: 'bg-blue-50 text-blue-700' },
+    { label: 'Average Score', value: avgScore ? `${avgScore}/100` : 'N/A', icon: 'â­', color: 'bg-purple-50 text-purple-700' },
+    { label: 'Best Score', value: bestScore ? `${bestScore}/100` : 'N/A', icon: 'ðŸ†', color: 'bg-amber-50 text-amber-700' },
+    { label: 'Current Streak', value: `${streak} day${streak !== 1 ? 's' : ''}`, icon: 'ðŸ”¥', color: 'bg-orange-50 text-orange-700' },
   ]
 
   return (
@@ -137,7 +143,7 @@ export default async function DashboardPage() {
           </div>
           {!recentFeedback || recentFeedback.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <div className="text-4xl mb-3">📝</div>
+              <div className="text-4xl mb-3">ðŸ“</div>
               <p className="text-gray-500 text-sm">No submissions yet.</p>
               <Link href="/practice" className="text-[#4db8a4] text-sm font-medium hover:underline mt-1 inline-block">
                 Start your first practice session
@@ -146,20 +152,20 @@ export default async function DashboardPage() {
           ) : (
             <div className="divide-y divide-gray-50">
               {recentFeedback.map((item) => {
-                const ticket = Array.isArray(item.tickets) ? item.tickets[0] : item.tickets
-                const scenario = ticket && (Array.isArray((ticket as any).scenarios) ? (ticket as any).scenarios[0] : (ticket as any).scenarios)
+                const submission = Array.isArray(item.submissions) ? item.submissions[0] : item.submissions
+                const scenario = submission && (Array.isArray((submission as any).scenarios) ? (submission as any).scenarios[0] : (submission as any).scenarios)
                 return (
                   <div key={item.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-[#1a2744] truncate">
-                        {scenario?.title || ticket?.title || 'Untitled Ticket'}
+                        {scenario?.title || submission?.subject_line || 'Untitled Ticket'}
                       </div>
                       <div className="text-xs text-gray-400 mt-0.5">
                         {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
-                      <ScoreBadge score={item.total_score} />
+                      <ScoreBadge score={item.score} />
                       <Link
                         href={`/feedback/${item.id}`}
                         className="text-xs text-[#4db8a4] font-medium hover:underline"
@@ -175,7 +181,7 @@ export default async function DashboardPage() {
           {recentFeedback && recentFeedback.length > 0 && (
             <div className="px-6 py-3 border-t border-gray-50">
               <Link href="/feedback" className="text-sm text-[#4db8a4] font-medium hover:underline">
-                View all feedback →
+                View all feedback â†’
               </Link>
             </div>
           )}
@@ -184,7 +190,7 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <div className="bg-[#1a2744] rounded-xl p-6 text-white">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">💡</span>
+              <span className="text-xl">ðŸ’¡</span>
               <h3 className="font-semibold text-[#4db8a4]">Tip of the Day</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">{tip}</p>

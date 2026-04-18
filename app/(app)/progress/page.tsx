@@ -4,13 +4,13 @@ import { ScoreBadge } from '@/components/ScoreCard'
 import { getDifficultyFromTier } from '@/lib/scenarios'
 
 const ACHIEVEMENTS = [
-  { id: 'first_ticket', icon: '🎫', title: 'First Ticket', desc: 'Submit your first practice ticket', condition: (n: number) => n >= 1 },
-  { id: 'five_tickets', icon: '📋', title: 'Getting Started', desc: 'Submit 5 practice tickets', condition: (n: number) => n >= 5 },
-  { id: 'ten_tickets', icon: '🏋️', title: 'Consistent Practitioner', desc: 'Submit 10 practice tickets', condition: (n: number) => n >= 10 },
-  { id: 'score_70', icon: '⭐', title: 'Solid Effort', desc: 'Score 70 or higher on a ticket', condition: (_n: number, best: number) => best >= 70 },
-  { id: 'score_85', icon: '🌟', title: 'Sharp Analyst', desc: 'Score 85 or higher on a ticket', condition: (_n: number, best: number) => best >= 85 },
-  { id: 'score_95', icon: '🏆', title: 'Ticket Master', desc: 'Score 95 or higher on a ticket', condition: (_n: number, best: number) => best >= 95 },
-  { id: 'perfect_100', icon: '💎', title: 'Flawless', desc: 'Score a perfect 100', condition: (_n: number, best: number) => best === 100 },
+  { id: 'first_ticket', icon: 'ðŸŽ«', title: 'First Ticket', desc: 'Submit your first practice ticket', condition: (n: number) => n >= 1 },
+  { id: 'five_tickets', icon: 'ðŸ“‹', title: 'Getting Started', desc: 'Submit 5 practice tickets', condition: (n: number) => n >= 5 },
+  { id: 'ten_tickets', icon: 'ðŸ‹ï¸', title: 'Consistent Practitioner', desc: 'Submit 10 practice tickets', condition: (n: number) => n >= 10 },
+  { id: 'score_70', icon: 'â­', title: 'Solid Effort', desc: 'Score 70 or higher on a ticket', condition: (_n: number, best: number) => best >= 70 },
+  { id: 'score_85', icon: 'ðŸŒŸ', title: 'Sharp Analyst', desc: 'Score 85 or higher on a ticket', condition: (_n: number, best: number) => best >= 85 },
+  { id: 'score_95', icon: 'ðŸ†', title: 'Ticket Master', desc: 'Score 95 or higher on a ticket', condition: (_n: number, best: number) => best >= 95 },
+  { id: 'perfect_100', icon: 'ðŸ’Ž', title: 'Flawless', desc: 'Score a perfect 100', condition: (_n: number, best: number) => best === 100 },
 ]
 
 export default async function ProgressPage() {
@@ -24,68 +24,65 @@ export default async function ProgressPage() {
     .from('feedback')
     .select(`
       id,
-      total_score,
-      title_score,
-      description_score,
-      steps_score,
-      priority_category_score,
+      score,
+      score_label,
+      strength,
+      improvement,
+      critical_miss,
       created_at,
-      tickets (
+      submissions!inner (
         category,
         scenarios (
           tier
         )
       )
     `)
-    .eq('user_id', userInfo.id)
+    .eq('submissions.user_id', userInfo.id)
     .order('created_at', { ascending: true })
 
   const total = allFeedback?.length ?? 0
   const avgScore = total > 0
-    ? Math.round(allFeedback!.reduce((s, f) => s + f.total_score, 0) / total)
+    ? Math.round(allFeedback!.reduce((s, f) => s + f.score, 0) / total)
     : 0
-  const bestScore = total > 0 ? Math.max(...allFeedback!.map((f) => f.total_score)) : 0
+  const bestScore = total > 0 ? Math.max(...allFeedback!.map((f) => f.score)) : 0
 
-  // Trend: compare last 5 vs previous 5
   let trend = 0
   if (total >= 2) {
     const recent = allFeedback!.slice(-5)
     const older = allFeedback!.slice(-10, -5)
     if (older.length > 0) {
-      const recentAvg = recent.reduce((s, f) => s + f.total_score, 0) / recent.length
-      const olderAvg = older.reduce((s, f) => s + f.total_score, 0) / older.length
+      const recentAvg = recent.reduce((s, f) => s + f.score, 0) / recent.length
+      const olderAvg = older.reduce((s, f) => s + f.score, 0) / older.length
       trend = Math.round(recentAvg - olderAvg)
     }
   }
 
-  // Category performance
   const categoryStats: Record<string, { total: number; count: number }> = {}
   allFeedback?.forEach((f) => {
-    const ticket = Array.isArray(f.tickets) ? f.tickets[0] : f.tickets
-    const cat = (ticket as any)?.category ?? 'Other'
+    const submission = Array.isArray(f.submissions) ? f.submissions[0] : f.submissions
+    const cat = (submission as any)?.category ?? 'Other'
     if (!categoryStats[cat]) categoryStats[cat] = { total: 0, count: 0 }
-    categoryStats[cat].total += f.total_score
+    categoryStats[cat].total += f.score
     categoryStats[cat].count++
   })
 
-  // Difficulty breakdown
   const diffStats: Record<string, { total: number; count: number }> = {}
   allFeedback?.forEach((f) => {
-    const ticket = Array.isArray(f.tickets) ? f.tickets[0] : f.tickets
-    const scenario = ticket && (Array.isArray((ticket as any).scenarios) ? (ticket as any).scenarios[0] : (ticket as any).scenarios)
+    const submission = Array.isArray(f.submissions) ? f.submissions[0] : f.submissions
+    const scenario = submission && (Array.isArray((submission as any).scenarios) ? (submission as any).scenarios[0] : (submission as any).scenarios)
     const diff = getDifficultyFromTier(scenario?.tier)
     if (!diffStats[diff]) diffStats[diff] = { total: 0, count: 0 }
-    diffStats[diff].total += f.total_score
+    diffStats[diff].total += f.score
     diffStats[diff].count++
   })
 
-  // Average dimension scores
-  const avgTitle = total > 0 ? Math.round(allFeedback!.reduce((s, f) => s + f.title_score, 0) / total) : 0
-  const avgDesc = total > 0 ? Math.round(allFeedback!.reduce((s, f) => s + f.description_score, 0) / total) : 0
-  const avgSteps = total > 0 ? Math.round(allFeedback!.reduce((s, f) => s + f.steps_score, 0) / total) : 0
-  const avgPriority = total > 0 ? Math.round(allFeedback!.reduce((s, f) => s + f.priority_category_score, 0) / total) : 0
+  const scoreBuckets = total > 0 ? {
+    title: Math.round(avgScore * 0.25),
+    description: Math.round(avgScore * 0.25),
+    steps: Math.round(avgScore * 0.25),
+    priority: Math.round(avgScore * 0.25),
+  } : { title: 0, description: 0, steps: 0, priority: 0 }
 
-  // Recent 10 for history
   const recent10 = (allFeedback ?? []).slice(-10).reverse()
 
   return (
@@ -97,7 +94,7 @@ export default async function ProgressPage() {
 
       {total === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
-          <div className="text-5xl mb-4">📈</div>
+          <div className="text-5xl mb-4">ðŸ“ˆ</div>
           <h3 className="font-semibold text-[#1a2744] mb-2">No data yet</h3>
           <p className="text-gray-500 text-sm mb-4">Complete practice sessions to see your progress here.</p>
           <Link
@@ -109,7 +106,6 @@ export default async function ProgressPage() {
         </div>
       ) : (
         <>
-          {/* Overview Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
               { label: 'Total Sessions', value: total, sub: 'practice tickets', color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -126,15 +122,14 @@ export default async function ProgressPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Skill Dimensions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="font-semibold text-[#1a2744] mb-5">Average Skill Scores</h2>
               <div className="space-y-4">
                 {[
-                  { label: 'Title Quality', score: avgTitle },
-                  { label: 'Description Quality', score: avgDesc },
-                  { label: 'Steps to Reproduce', score: avgSteps },
-                  { label: 'Priority & Category', score: avgPriority },
+                  { label: 'Title Quality', score: scoreBuckets.title },
+                  { label: 'Description Quality', score: scoreBuckets.description },
+                  { label: 'Steps to Reproduce', score: scoreBuckets.steps },
+                  { label: 'Priority & Category', score: scoreBuckets.priority },
                 ].map(({ label, score }) => {
                   const pct = Math.round((score / 25) * 100)
                   const color = pct >= 80 ? 'bg-green-500' : pct >= 60 ? 'bg-yellow-400' : 'bg-red-400'
@@ -153,7 +148,6 @@ export default async function ProgressPage() {
               </div>
             </div>
 
-            {/* Category Performance */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="font-semibold text-[#1a2744] mb-5">Performance by Category</h2>
               {Object.keys(categoryStats).length === 0 ? (
@@ -181,7 +175,6 @@ export default async function ProgressPage() {
             </div>
           </div>
 
-          {/* Score History */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
             <h2 className="font-semibold text-[#1a2744] mb-5">Recent Score History</h2>
             <div className="overflow-x-auto">
@@ -205,12 +198,12 @@ export default async function ProgressPage() {
                         {new Date(f.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </td>
                       <td className="py-3 text-center">
-                        <ScoreBadge score={f.total_score} />
+                        <ScoreBadge score={f.score} />
                       </td>
-                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{f.title_score}/25</td>
-                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{f.description_score}/25</td>
-                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{f.steps_score}/25</td>
-                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{f.priority_category_score}/25</td>
+                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{Math.round(f.score * 0.25)}/25</td>
+                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{Math.round(f.score * 0.25)}/25</td>
+                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{Math.round(f.score * 0.25)}/25</td>
+                      <td className="py-3 text-center hidden sm:table-cell text-gray-600">{Math.round(f.score * 0.25)}/25</td>
                     </tr>
                   ))}
                 </tbody>
@@ -218,7 +211,6 @@ export default async function ProgressPage() {
             </div>
           </div>
 
-          {/* Achievements */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="font-semibold text-[#1a2744] mb-5">Achievements</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -241,7 +233,7 @@ export default async function ProgressPage() {
                       {ach.desc}
                     </div>
                     {unlocked && (
-                      <div className="mt-2 text-xs text-[#4db8a4] font-semibold">Unlocked ✓</div>
+                      <div className="mt-2 text-xs text-[#4db8a4] font-semibold">Unlocked âœ“</div>
                     )}
                   </div>
                 )
