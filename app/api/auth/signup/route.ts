@@ -4,22 +4,9 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   const { email, password, fullName } = await request.json()
 
-  // Split full name into first + last
-  const nameParts = (fullName || '').trim().split(' ')
-  const firstName = nameParts[0] || ''
-  const lastName = nameParts.slice(1).join(' ') || ''
-
-  // Auth client (for signup)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  )
-
-  // Admin client (for inserting into users table, bypasses RLS)
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
   )
 
@@ -31,16 +18,6 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })
-  }
-
-  // ✅ Save name to public.users table
-  if (data.user) {
-    await supabaseAdmin.from('users').insert({
-      id: data.user.id,
-      email: data.user.email,
-      first_name: firstName,
-      last_name: lastName,
-    })
   }
 
   if (data.session) {
