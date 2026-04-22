@@ -15,15 +15,19 @@ export default async function AppLayout({
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
+    .from('users')
+    .select('first_name, last_name')
     .eq('id', user.id)
     .single()
+
+  const fullName = profile
+    ? `${profile.first_name} ${profile.last_name}`.trim()
+    : null
 
   return (
     <div className="flex h-screen bg-[#f0f4f8] overflow-hidden">
       <Sidebar
-        userName={profile?.full_name ?? null}
+        userName={fullName}
         userEmail={user.email ?? null}
       />
       <main className="ml-64 flex-1 flex flex-col overflow-hidden">
