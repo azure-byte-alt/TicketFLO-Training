@@ -4,13 +4,13 @@ import { ScoreBadge } from '@/components/ScoreCard'
 
 const TIPS = [
   'Always include the affected system or application name in the ticket title.',
-  'Specify when the issue started â€” exact time and date helps IT prioritize.',
+  'Specify when the issue started — exact time and date helps IT prioritize.',
   'Number your reproduction steps for clarity and consistency.',
-  'Include error messages verbatim â€” exact text helps find solutions faster.',
+  'Include error messages verbatim — exact text helps find solutions faster.',
   'State the business impact: is work blocked, or is it a minor inconvenience?',
-  'Mention how many users are affected â€” one person or the whole department?',
+  'Mention how many users are affected — one person or the whole department?',
   'Note any recent changes: updates, new software, configuration changes.',
-  'Attach screenshots or logs when possible â€” a picture is worth a thousand words.',
+  'Attach screenshots or logs when possible — a picture is worth a thousand words.',
 ]
 
 function getTipOfTheDay() {
@@ -27,8 +27,8 @@ export default async function DashboardPage() {
   const supabase = createClient()
 
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
+    .from('users')
+    .select('first_name, last_name')
     .eq('id', userInfo.id)
     .single()
 
@@ -90,22 +90,23 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const displayName = profile?.full_name || userInfo.email?.split('@')[0] || 'there'
+  const firstName = profile?.first_name || userInfo.email?.split('@')[0] || 'there'
+  const displayName = profile ? `${profile.first_name} ${profile.last_name}`.trim() : firstName
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const tip = getTipOfTheDay()
 
   const stats = [
-    { label: 'Total Tickets', value: totalTickets, icon: 'ðŸŽ«', color: 'bg-blue-50 text-blue-700' },
-    { label: 'Average Score', value: avgScore ? `${avgScore}/100` : 'N/A', icon: 'â­', color: 'bg-purple-50 text-purple-700' },
-    { label: 'Best Score', value: bestScore ? `${bestScore}/100` : 'N/A', icon: 'ðŸ†', color: 'bg-amber-50 text-amber-700' },
-    { label: 'Current Streak', value: `${streak} day${streak !== 1 ? 's' : ''}`, icon: 'ðŸ”¥', color: 'bg-orange-50 text-orange-700' },
+    { label: 'Total Tickets', value: totalTickets, icon: '🎫', color: 'bg-blue-50 text-blue-700' },
+    { label: 'Average Score', value: avgScore ? `${avgScore}/100` : 'N/A', icon: '⭐', color: 'bg-purple-50 text-purple-700' },
+    { label: 'Best Score', value: bestScore ? `${bestScore}/100` : 'N/A', icon: '🏆', color: 'bg-amber-50 text-amber-700' },
+    { label: 'Current Streak', value: `${streak} day${streak !== 1 ? 's' : ''}`, icon: '🔥', color: 'bg-orange-50 text-orange-700' },
   ]
 
   return (
     <div className="p-8">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a2744]">Welcome back, {displayName}!</h1>
+          <h1 className="text-2xl font-bold text-[#1a2744]">Welcome back, {firstName}!</h1>
           <p className="text-gray-500 mt-1">{today}</p>
         </div>
         <div className="flex gap-3">
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
           </div>
           {!recentFeedback || recentFeedback.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <div className="text-4xl mb-3">ðŸ“</div>
+              <div className="text-4xl mb-3">📝</div>
               <p className="text-gray-500 text-sm">No submissions yet.</p>
               <Link href="/practice" className="text-[#4db8a4] text-sm font-medium hover:underline mt-1 inline-block">
                 Start your first practice session
@@ -181,7 +182,7 @@ export default async function DashboardPage() {
           {recentFeedback && recentFeedback.length > 0 && (
             <div className="px-6 py-3 border-t border-gray-50">
               <Link href="/feedback" className="text-sm text-[#4db8a4] font-medium hover:underline">
-                View all feedback â†’
+                View all feedback →
               </Link>
             </div>
           )}
@@ -190,7 +191,7 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <div className="bg-[#1a2744] rounded-xl p-6 text-white">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">ðŸ’¡</span>
+              <span className="text-xl">💡</span>
               <h3 className="font-semibold text-[#4db8a4]">Tip of the Day</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">{tip}</p>
