@@ -410,13 +410,27 @@ export default function LearnPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
 
-      {/* Page header */}
+          {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Learn</h1>
         <p className="text-gray-500 text-sm mt-1">
           6 modules · Agent-focused ticket writing training
         </p>
       </div>
+
+      {/* How it works banner */}
+      <div className="bg-[#1A2E3B] rounded-xl p-4 mb-6 flex items-start gap-4">
+        <span className="text-2xl flex-shrink-0">🎓</span>
+        <div>
+          <p className="text-white font-medium text-sm mb-1">How this works</p>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            Work through each module in order — one at a time. Complete a module by clicking <span className="text-[#1D9E75] font-medium">Next module →</span> at the bottom. 
+            Modules with a <span className="text-amber-400 font-medium">🔒 lock</span> will unlock automatically as you finish the one before it. 
+            Start with Module 1 and work your way through all 6 before heading to Practice.
+          </p>
+        </div>
+      </div>
+
 
       {/* Progress stepper */}
       <div className="flex items-center gap-1 mb-8">
