@@ -5,11 +5,16 @@ export function getToken(): string | null {
   return cookies().get('sb-access-token')?.value ?? null
 }
 
-export function decodeToken(token: string): { id: string; email: string } | null {
+export function decodeToken(token: string): { id: string; email: string; fullName: string | null } | null {
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
     if (!payload.sub) return null
-    return { id: payload.sub as string, email: (payload.email ?? '') as string }
+    const fullName = payload.user_metadata?.full_name ?? null
+    return {
+      id: payload.sub as string,
+      email: (payload.email ?? '') as string,
+      fullName,
+    }
   } catch {
     return null
   }
