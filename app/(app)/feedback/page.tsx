@@ -122,7 +122,7 @@ export default async function FeedbackPage() {
                         href={`/feedback/${item.id}`}
                         className="text-xs text-[#4db8a4] font-medium hover:underline whitespace-nowrap"
                       >
-                        View Details â†’
+                        View Details →
                       </Link>
                     </td>
                   </tr>
