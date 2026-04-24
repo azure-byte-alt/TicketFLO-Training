@@ -134,7 +134,7 @@ export default async function FeedbackDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
-            <span className="text-green-500">âœ“</span> Strengths
+            <span className="text-green-500">✓</span> Strengths
           </h2>
           {!feedback.strength ? (
             <p className="text-gray-400 text-sm">No specific strengths noted.</p>
@@ -154,7 +154,7 @@ export default async function FeedbackDetailPage({
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="font-semibold text-[#1a2744] mb-4 flex items-center gap-2">
-            <span className="text-amber-500">âš </span> Areas to Improve
+            <span className="text-amber-500">⚠ </span> Areas to Improve
           </h2>
           {!feedback.improvement && !feedback.critical_miss ? (
             <p className="text-gray-400 text-sm">No improvements needed â€” great ticket!</p>
