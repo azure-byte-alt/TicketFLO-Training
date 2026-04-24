@@ -4,14 +4,15 @@ import { ScoreBadge } from '@/components/ScoreCard'
 import { getDifficultyFromTier } from '@/lib/scenarios'
 
 const ACHIEVEMENTS = [
-  { id: 'first_ticket', icon: 'ðŸŽ«', title: 'First Ticket', desc: 'Submit your first practice ticket', condition: (n: number) => n >= 1 },
-  { id: 'five_tickets', icon: 'ðŸ“‹', title: 'Getting Started', desc: 'Submit 5 practice tickets', condition: (n: number) => n >= 5 },
-  { id: 'ten_tickets', icon: 'ðŸ‹ï¸', title: 'Consistent Practitioner', desc: 'Submit 10 practice tickets', condition: (n: number) => n >= 10 },
-  { id: 'score_70', icon: 'â­', title: 'Solid Effort', desc: 'Score 70 or higher on a ticket', condition: (_n: number, best: number) => best >= 70 },
-  { id: 'score_85', icon: 'ðŸŒŸ', title: 'Sharp Analyst', desc: 'Score 85 or higher on a ticket', condition: (_n: number, best: number) => best >= 85 },
-  { id: 'score_95', icon: 'ðŸ†', title: 'Ticket Master', desc: 'Score 95 or higher on a ticket', condition: (_n: number, best: number) => best >= 95 },
-  { id: 'perfect_100', icon: 'ðŸ’Ž', title: 'Flawless', desc: 'Score a perfect 100', condition: (_n: number, best: number) => best === 100 },
+  { id: 'first_ticket', icon: '🎫', title: 'First Ticket', desc: 'Submit your first practice ticket', condition: (n: number) => n >= 1 },
+  { id: 'five_tickets', icon: '🎯', title: 'Getting Started', desc: 'Submit 5 practice tickets', condition: (n: number) => n >= 5 },
+  { id: 'ten_tickets', icon: '📋', title: 'Consistent Practitioner', desc: 'Submit 10 practice tickets', condition: (n: number) => n >= 10 },
+  { id: 'score_70', icon: '⭐', title: 'Solid Effort', desc: 'Score 70 or higher on a ticket', condition: (_n: number, best: number) => best >= 70 },
+  { id: 'score_85', icon: '🏆', title: 'Sharp Analyst', desc: 'Score 85 or higher on a ticket', condition: (_n: number, best: number) => best >= 85 },
+  { id: 'score_95', icon: '💪', title: 'Ticket Master', desc: 'Score 95 or higher on a ticket', condition: (_n: number, best: number) => best >= 95 },
+  { id: 'perfect_100', icon: '🌟', title: 'Flawless', desc: 'Score a perfect 100', condition: (_n: number, best: number) => best === 100 },
 ]
+
 
 export default async function ProgressPage() {
   const supabase = createClient()
