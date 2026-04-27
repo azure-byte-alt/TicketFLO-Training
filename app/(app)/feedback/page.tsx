@@ -1,3 +1,6 @@
+export default function FeedbackPage() {
+  return (
+
 <div className="grid gap-4">
  {feedbackList.map((item) => (
    <div className="bg-white rounded-2xl shadow-md p-5 border border-slate-100 hover:shadow-xl transition">
@@ -35,5 +38,6 @@
       </div>
 
    </div>
- ))}
-</div>
+ )
+}
+
