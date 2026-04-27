@@ -410,7 +410,7 @@ export default function LearnPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
 
-          {/* Page header */}
+      {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Learn</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -418,19 +418,19 @@ export default function LearnPage() {
         </p>
       </div>
 
-      {/* How it works banner */}
-      <div className="bg-[#1A2E3B] rounded-xl p-4 mb-6 flex items-start gap-4">
+      {/* How it works banner — LIGHT */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex items-start gap-4">
         <span className="text-2xl flex-shrink-0">🎓</span>
         <div>
-          <p className="text-white font-medium text-sm mb-1">How this works</p>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Work through each module in order — one at a time. Complete a module by clicking <span className="text-[#1D9E75] font-medium">Next module →</span> at the bottom. 
-            Modules with a <span className="text-amber-400 font-medium">🔒 lock</span> will unlock automatically as you finish the one before it. 
+          <p className="text-gray-900 font-medium text-sm mb-1">How this works</p>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            Work through each module in order — one at a time. Complete a module by clicking{' '}
+            <span className="text-[#1D9E75] font-medium">Next module →</span> at the bottom.
+            Modules with a <span className="text-amber-500 font-medium">🔒 lock</span> will unlock automatically as you finish the one before it.
             Start with Module 1 and work your way through all 6 before heading to Practice.
           </p>
         </div>
       </div>
-
 
       {/* Progress stepper */}
       <div className="flex items-center gap-1 mb-8">
@@ -447,7 +447,7 @@ export default function LearnPage() {
                   ${isDone
                     ? 'bg-[#1D9E75] text-white'
                     : isActive
-                    ? 'bg-[#1A2E3B] text-white'
+                    ? 'bg-gray-800 text-white'
                     : isAccessible
                     ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -466,18 +466,18 @@ export default function LearnPage() {
       {/* Module card */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
 
-        {/* Module header */}
-        <div className="bg-[#1A2E3B] px-6 py-5">
+        {/* Module header — LIGHT */}
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-5">
           <div className="flex items-center gap-3 mb-1">
             <span className="text-2xl">{mod.icon}</span>
             <div>
               <p className="text-[#1D9E75] text-xs font-medium tracking-wide uppercase">
                 Module {mod.id} of {modules.length}
               </p>
-              <h2 className="text-white text-lg font-semibold leading-snug">{mod.title}</h2>
+              <h2 className="text-gray-900 text-lg font-semibold leading-snug">{mod.title}</h2>
             </div>
           </div>
-          <p className="text-gray-400 text-sm ml-11">{mod.subtitle}</p>
+          <p className="text-gray-500 text-sm ml-11">{mod.subtitle}</p>
         </div>
 
         {/* Module body */}
@@ -528,7 +528,7 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* Module list sidebar */}
+      {/* Module list */}
       <div className="mt-6">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">All modules</p>
         <div className="space-y-2">
@@ -543,7 +543,7 @@ export default function LearnPage() {
                 disabled={!isAccessible}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm transition-all
                   ${isActive
-                    ? 'bg-[#1A2E3B] text-white'
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
                     : isDone
                     ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
                     : isAccessible
@@ -554,7 +554,7 @@ export default function LearnPage() {
                 <span className="text-base flex-shrink-0">{m.icon}</span>
                 <span className="flex-1 leading-snug">{m.title}</span>
                 {isDone && <span className="text-[#1D9E75] text-xs font-medium flex-shrink-0">✓ Done</span>}
-                {isActive && <span className="text-[#1D9E75] text-xs font-medium flex-shrink-0">← current</span>}
+                {isActive && !isDone && <span className="text-emerald-600 text-xs font-medium flex-shrink-0">← current</span>}
                 {!isDone && !isActive && !isAccessible && <span className="text-gray-300 text-xs flex-shrink-0">🔒</span>}
               </button>
             )
@@ -562,12 +562,12 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* All complete CTA */}
+      {/* All complete CTA — LIGHT */}
       {allDone && (
-        <div className="mt-6 bg-[#1A2E3B] rounded-xl p-6 text-center">
+        <div className="mt-6 bg-emerald-50 border border-emerald-100 rounded-xl p-6 text-center">
           <p className="text-2xl mb-2">🎯</p>
-          <h3 className="text-white font-semibold text-lg mb-1">All 6 modules complete!</h3>
-          <p className="text-gray-400 text-sm mb-4">You know what makes a strong ticket. Now put it into practice.</p>
+          <h3 className="text-gray-900 font-semibold text-lg mb-1">All 6 modules complete!</h3>
+          <p className="text-gray-500 text-sm mb-4">You know what makes a strong ticket. Now put it into practice.</p>
           <a
             href="/practice"
             className="inline-block bg-[#1D9E75] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0F6E56] transition-all"
