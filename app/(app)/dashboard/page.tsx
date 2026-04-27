@@ -1,305 +1,343 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
+"use client";
 
-export default async function Dashboard() {
-  const supabase = await createClient()
-  
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  
-  if (userError || !user) {
-    redirect('/login')
-  }
+import { useState } from "react";
 
-  // Fetch user stats from database
-  const { data: submissions } = await supabase
-    .from('submissions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+// ── Types ──────────────────────────────────────────────────────────────────
+interface Submission {
+  id: number;
+  title: string;
+  date: string;
+  score: number;
+}
 
-  const totalTickets = submissions?.length || 2
-  const scores = submissions?.map(s => s.score) || [18, 52]
-  const averageScore = scores.length > 0 
-    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) 
-    : 35
-  const bestScore = scores.length > 0 ? Math.max(...scores) : 52
-  const currentStreak = 0 // Calculate based on consecutive days
-  const certProgress = Math.min(Math.round((totalTickets / 15) * 100), 100)
+interface GrowthItem {
+  label: string;
+  color: string;
+  bg: string;
+}
 
-  const recentSubmissions = submissions?.slice(0, 2) || [
-    { id: 1, scenario_title: 'Password reset — new hire', score: 18, created_at: '2026-04-25' },
-    { id: 2, scenario_title: 'Printer offline — HR floor', score: 52, created_at: '2026-04-18' }
-  ]
+// ── Mock data — replace with your real session/API data ───────────────────
+const user = {
+  name: "Sonja",
+  initials: "SJ",
+  role: "Trainee",
+  totalTickets: 2,
+  avgScore: 35,
+  bestScore: 52,
+  streak: 0,
+  certProgress: 35,
+  ticketsToUnlock: 8,
+};
 
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 80) return 'bg-emerald-100 text-emerald-700 border-emerald-200'
-    if (score >= 60) return 'bg-amber-100 text-amber-700 border-amber-200'
-    return 'bg-rose-100 text-rose-700 border-rose-200'
-  }
+const recentSubmissions: Submission[] = [
+  { id: 1, title: "Password reset — new hire", date: "Apr 25, 2026", score: 18 },
+  { id: 2, title: "Printer offline — HR floor", date: "Apr 18, 2026", score: 52 },
+];
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 
-                    user?.email?.split('@')[0] || 
-                    'Support Pro'
+const growthItems: GrowthItem[] = [
+  { label: "New Practice Session",      color: "#0e7c5b", bg: "#f0faf6" },
+  { label: "Continue Last Scenario",    color: "#6b7a8f", bg: "#f4f5f7" },
+  { label: "Improve Weak Area",         color: "#b45309", bg: "#fffbeb" },
+  { label: "View Certificate Progress", color: "#6b7a8f", bg: "#f4f5f7" },
+];
 
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })
+const navItems = [
+  { label: "Dashboard",   href: "/dashboard",   active: true  },
+  { label: "Learn",       href: "/learn",        active: false },
+  { label: "Practice",    href: "/practice",     active: false },
+  { label: "Feedback",    href: "/feedback",     active: false },
+  { label: "Progress",    href: "/progress",     active: false },
+  { label: "Settings",    href: "/settings",     active: false },
+  { label: "Certificate", href: "/certificate",  active: false },
+];
 
-  const TIPS = [
-    'Always include the affected system or application name in the ticket title.',
-    'Specify when the issue started — exact time and date helps IT prioritize.',
-    'Number your reproduction steps for clarity and consistency.',
-    'Include error messages verbatim — exact text helps find solutions faster.',
-    'Mention how many users are affected — one person or the whole department?',
-    'Note any recent changes: updates, new software, configuration changes.',
-  ]
+// ── Helpers ────────────────────────────────────────────────────────────────
+function getScoreStyle(score: number): { text: string; bg: string } {
+  if (score >= 80) return { text: "#0e7c5b", bg: "#f0faf6" };
+  if (score >= 60) return { text: "#b45309", bg: "#fffbeb" };
+  return { text: "#c0392b", bg: "#fff0f0" };
+}
 
-  const randomTip = TIPS[Math.floor(Math.random() * TIPS.length)]
+// ── Sub-components ─────────────────────────────────────────────────────────
+function ScoreBadge({ score }: { score: number }) {
+  const { text, bg } = getScoreStyle(score);
+  return (
+    <span
+      className="text-xs font-bold px-2.5 py-1 rounded-full"
+      style={{ color: text, background: bg }}
+    >
+      {score}/100
+    </span>
+  );
+}
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+  sub?: string;
+  valueColor?: string;
+}
+
+function StatCard({ icon, value, label, sub, valueColor }: StatCardProps) {
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
+        style={{ background: "#f4f5f7" }}
+      >
+        {icon}
+      </div>
+      <div
+        className="text-2xl font-bold tracking-tight"
+        style={{ color: valueColor ?? "#0f1623" }}
+      >
+        {value}
+      </div>
+      <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">{label}</div>
+      {sub && <div className="text-xs text-gray-500 mt-1.5">{sub}</div>}
+    </div>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────
+export default function DashboardPage() {
+  const scoreStyle = getScoreStyle(user.avgScore);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Welcome back, {firstName} 👋
-          </h1>
-          <p className="text-slate-600 text-lg mb-4">{currentDate}</p>
-          <p className="text-slate-500 italic text-sm">
-            Every strong ticket builds career confidence.
+    <div className="flex min-h-screen bg-gray-50 font-sans">
+
+      {/* ── Sidebar ─────────────────────────────────────────── */}
+      <aside className="w-48 flex-shrink-0 bg-white border-r border-gray-100 flex flex-col">
+
+        {/* Logo */}
+        <div className="px-5 py-5 border-b border-gray-100">
+          <div className="text-[15px] font-bold text-gray-900 tracking-tight">TicketFLO</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">Training</div>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 py-3">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] transition-all duration-150 border-l-2 no-underline ${
+                item.active
+                  ? "text-emerald-700 bg-emerald-50 border-emerald-600 font-medium"
+                  : "text-gray-500 border-transparent hover:bg-gray-50 hover:text-gray-700"
+              }`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        {/* User */}
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center text-[11px] font-bold text-emerald-700 flex-shrink-0">
+            {user.initials}
+          </div>
+          <div>
+            <div className="text-[12px] font-semibold text-gray-800">{user.name} Jones</div>
+            <div className="text-[11px] text-gray-400">{user.role}</div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main ────────────────────────────────────────────── */}
+      <main className="flex-1 p-7 overflow-auto">
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">
+              Welcome back, {user.name} 👋
+            </h1>
+            <p className="text-[13px] text-gray-500 mt-1">
+              Every strong ticket builds career confidence.
+            </p>
+          </div>
+          <button className="bg-emerald-700 hover:bg-emerald-800 text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap">
+            + Start Practice
+          </button>
+        </div>
+
+        {/* Certification Progress */}
+        <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 mb-4">
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Certification Progress
+            </span>
+            <span className="text-[13px] font-bold text-emerald-700">
+              {user.certProgress}% Complete
+            </span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-600 rounded-full transition-all duration-700"
+              style={{ width: `${user.certProgress}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-gray-400 mt-2">
+            Complete {user.ticketsToUnlock} more tickets to unlock your certificate
           </p>
-
-          {/* Certification Progress Bar */}
-          <div className="mt-6 bg-white rounded-xl p-5 shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">Certification Progress</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {totalTickets} of 15 practice tickets completed
-                </p>
-              </div>
-              <span className="text-2xl font-bold text-teal-600">{certProgress}%</span>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-teal-500 to-emerald-500 h-3 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${certProgress}%` }}
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          
-          {/* Total Tickets */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📊</span>
-              </div>
-            </div>
-            <p className="text-slate-600 text-sm font-medium mb-1">Total Tickets</p>
-            <p className="text-4xl font-bold text-slate-900">{totalTickets}</p>
-          </div>
+        {/* Stat Cards */}
+        <div className="grid grid-cols-4 gap-3 mb-4">
 
-          {/* Average Score */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⭐</span>
-              </div>
-            </div>
-            <p className="text-slate-600 text-sm font-medium mb-1">Average Score</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-bold text-slate-900">{averageScore}</p>
-              <p className="text-lg text-slate-400 font-medium">/100</p>
-            </div>
-          </div>
+          <StatCard
+            icon={
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="10" rx="2" stroke="#0e7c5b" strokeWidth="1.5" />
+                <path d="M5 7h6M5 10h4" stroke="#0e7c5b" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+            }
+            value={user.totalTickets}
+            label="Total Tickets"
+            sub="Start your 3rd today"
+          />
 
-          {/* Best Score */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                bestScore >= 80 ? 'bg-emerald-50' : 
-                bestScore >= 60 ? 'bg-amber-50' : 'bg-rose-50'
-              }`}>
-                <span className="text-2xl">🏆</span>
-              </div>
-            </div>
-            <p className="text-slate-600 text-sm font-medium mb-1">Best Score</p>
-            <div className="flex items-baseline gap-2">
-              <p className={`text-4xl font-bold ${
-                bestScore >= 80 ? 'text-emerald-600' : 
-                bestScore >= 60 ? 'text-amber-600' : 'text-rose-600'
-              }`}>
-                {bestScore}
-              </p>
-              <p className="text-lg text-slate-400 font-medium">/100</p>
-            </div>
-          </div>
+          <StatCard
+            icon={
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5L8 2z"
+                  stroke={scoreStyle.text}
+                  strokeWidth="1.3"
+                />
+              </svg>
+            }
+            value={user.avgScore}
+            label="Average Score"
+            sub="Below 60 — let's fix that"
+            valueColor={scoreStyle.text}
+          />
 
-          {/* Current Streak */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                currentStreak > 0 ? 'bg-orange-50' : 'bg-slate-50'
-              }`}>
-                <span className="text-2xl">🔥</span>
-              </div>
-            </div>
-            <p className="text-slate-600 text-sm font-medium mb-1">Current Streak</p>
-            {currentStreak > 0 ? (
-              <>
-                <p className="text-4xl font-bold text-orange-600">{currentStreak}</p>
-                <p className="text-xs text-slate-500 mt-1">Day Momentum Streak 🔥</p>
-              </>
-            ) : (
-              <p className="text-lg font-semibold text-slate-400 mt-2">
-                Start Your Streak Today
-              </p>
-            )}
-          </div>
+          <StatCard
+            icon={
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5L8 2z"
+                  stroke="#b45309"
+                  strokeWidth="1.3"
+                />
+              </svg>
+            }
+            value={user.bestScore}
+            label="Best Score"
+            sub="Push past 60 next time"
+            valueColor="#b45309"
+          />
+
+          <StatCard
+            icon={
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 2c3 1.5 4 4 2 7M8 2C5 3.5 4 6.5 6 9"
+                  stroke="#9ea8b8"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                />
+                <path d="M6 12h4" stroke="#9ea8b8" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            }
+            value={user.streak === 0 ? "—" : user.streak}
+            label="Day Streak"
+            sub={
+              user.streak === 0
+                ? "Start your streak today"
+                : `${user.streak} Day Momentum Streak 🔥`
+            }
+            valueColor="#9ea8b8"
+          />
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Left Column - Recent Submissions */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Recent Submissions</h2>
-              
-              <div className="space-y-4">
-                {recentSubmissions.map((submission: any) => (
-                  <div 
-                    key={submission.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors duration-150"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900 mb-1">
-                        {submission.scenario_title || submission.title || 'Practice Ticket'}
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        {new Date(submission.created_at).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric', 
-                          year: 'numeric' 
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${getScoreBadgeColor(submission.score)}`}>
-                        {submission.score}/100
-                      </span>
-                      <Link 
-                        href={`/feedback/${submission.id}`}
-                        className="text-teal-600 hover:text-teal-700 font-medium text-sm"
-                      >
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Bottom Grid */}
+        <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 200px" }}>
 
-              <Link 
+          {/* Recent Submissions */}
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
+              Recent Submissions
+            </div>
+            {recentSubmissions.map((t, i) => (
+              <div
+                key={t.id}
+                className={`flex items-center justify-between py-3 ${
+                  i < recentSubmissions.length - 1 ? "border-b border-gray-50" : ""
+                }`}
+              >
+                <div>
+                  <div className="text-[13px] font-medium text-gray-700">{t.title}</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5">{t.date}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ScoreBadge score={t.score} />
+                  <span className="text-[12px] text-gray-300 hover:text-gray-500 cursor-pointer transition-colors">
+                    View →
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div className="mt-3">
+              <a
                 href="/feedback"
-                className="mt-6 text-teal-600 hover:text-teal-700 font-medium text-sm flex items-center gap-2 transition-colors"
+                className="text-[12px] text-emerald-700 font-medium hover:underline no-underline"
               >
                 View all feedback →
-              </Link>
-            </div>
-
-            {/* Start Practice CTA */}
-            <div className="mt-6">
-              <Link
-                href="/practice"
-                className="block w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-5 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg text-center"
-              >
-                ✏️ Start Practice Session
-              </Link>
+              </a>
             </div>
           </div>
 
-          {/* Right Column - Tip & Growth Center */}
-          <div className="space-y-6">
-            
+          {/* Right Column */}
+          <div className="flex flex-col gap-3">
+
             {/* Tip of the Day */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 shadow-lg text-white">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">💡</span>
-                <h3 className="font-bold text-lg">Tip of the Day</h3>
+            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+              <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
+                Tip of the Day
               </div>
-              <p className="text-slate-200 leading-relaxed">
-                {randomTip}
+              <p className="text-[12px] text-emerald-900 leading-relaxed">
+                Mention how many users are affected — one person or a whole department changes the urgency.
               </p>
             </div>
 
             {/* Growth Center */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-              <h3 className="font-bold text-slate-900 mb-4 text-lg">Growth Center</h3>
-              
-              <div className="space-y-3">
-                <Link
-                  href="/practice"
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-teal-50 hover:border-teal-200 border border-slate-200 transition-all duration-150 group"
-                >
-                  <span className="text-xl">✏️</span>
-                  <span className="font-medium text-slate-700 group-hover:text-teal-700">
-                    New Practice Session
-                  </span>
-                </Link>
-
-                <Link
-                  href="/practice?continue=true"
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-teal-50 hover:border-teal-200 border border-slate-200 transition-all duration-150 group"
-                >
-                  <span className="text-xl">▶️</span>
-                  <span className="font-medium text-slate-700 group-hover:text-teal-700">
-                    Continue Last Scenario
-                  </span>
-                </Link>
-
-                <Link
-                  href="/progress"
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-teal-50 hover:border-teal-200 border border-slate-200 transition-all duration-150 group"
-                >
-                  <span className="text-xl">📈</span>
-                  <span className="font-medium text-slate-700 group-hover:text-teal-700">
-                    Improve Weak Area
-                  </span>
-                </Link>
-
-                <Link
-                  href="/certificate"
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-teal-50 hover:border-teal-200 border border-slate-200 transition-all duration-150 group"
-                >
-                  <span className="text-xl">🏅</span>
-                  <span className="font-medium text-slate-700 group-hover:text-teal-700">
-                    View Certificate Progress
-                  </span>
-                </Link>
+            <div className="bg-white border border-gray-100 rounded-xl p-4 flex-1">
+              <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
+                Growth Center
               </div>
+              {growthItems.map((item, i) => (
+                <div
+                  key={item.label}
+                  className={`flex items-center gap-2.5 py-2 cursor-pointer group ${
+                    i < growthItems.length - 1 ? "border-b border-gray-50" : ""
+                  }`}
+                >
+                  <div
+                    className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                    style={{ background: item.bg }}
+                  >
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: item.color }}
+                    />
+                  </div>
+                  <span className="text-[12px] text-gray-600 group-hover:text-gray-900 transition-colors font-medium">
+                    {item.label}
+                  </span>
+                  <span className="text-gray-300 ml-auto text-sm group-hover:text-gray-500 transition-colors">
+                    ›
+                  </span>
+                </div>
+              ))}
             </div>
 
-            {/* Review Learning Button */}
-            <Link
-              href="/learn"
-              className="block w-full border-2 border-slate-200 hover:border-teal-500 text-slate-700 hover:text-teal-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200 text-center"
-            >
-              📚 Review Learning
-            </Link>
           </div>
         </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
