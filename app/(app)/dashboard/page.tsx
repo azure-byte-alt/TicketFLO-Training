@@ -41,11 +41,13 @@ export default async function DashboardPage() {
   // Step 1 — get this user's submissions
   const { data: submissions } = await supabase
     .from('submissions')
-    .select('id, title')
+    .select('id, subject_line')
     .eq('user_id', userInfo.id)
 
   const submissionIds = submissions?.map((s) => s.id) ?? []
-  const titleMap = Object.fromEntries((submissions ?? []).map((s) => [s.id, s.title]))
+  const titleMap = Object.fromEntries(
+    (submissions ?? []).map((s) => [s.id, s.subject_line])
+  )
 
   // Step 2 — get feedback for those submissions
   const { data: allFeedback } = submissionIds.length > 0
@@ -57,11 +59,9 @@ export default async function DashboardPage() {
     : { data: [] }
 
   const totalTickets = allFeedback?.length ?? 0
-
   const avgScore = totalTickets > 0
     ? Math.round(allFeedback!.reduce((sum, f) => sum + f.score, 0) / totalTickets)
     : 0
-
   const bestScore = totalTickets > 0
     ? Math.max(...allFeedback!.map((f) => f.score))
     : 0
@@ -91,7 +91,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-7 min-h-full">
-
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Welcome back, {firstName} 👋</h1>
